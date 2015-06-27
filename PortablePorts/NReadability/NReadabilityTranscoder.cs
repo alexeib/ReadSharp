@@ -136,7 +136,7 @@ namespace ReadSharp.Ports.NReadability
     private static readonly Regex _MailtoHrefRegex = new Regex("^\\s*mailto\\s*:", RegexOptions.IgnoreCase);
     private static readonly Regex _TitleWhitespacesCleanUpRegex = new Regex("\\s+");
 
-    private static readonly Dictionary<Regex, string> _articleContentElementHints = new Dictionary<Regex, string>
+    private readonly Dictionary<Regex, string> _articleContentElementHints = new Dictionary<Regex, string>
     {
       { new Regex("^https?://(www|mobile)\\.theverge.com", RegexOptions.IgnoreCase), ".entry-body" },
       { new Regex("^https?://(www|blog)\\.bufferapp.com", RegexOptions.IgnoreCase), ".post" },
@@ -146,7 +146,8 @@ namespace ReadSharp.Ports.NReadability
       { new Regex("^https?://(m\\.|www\\.)?youtube.com", RegexOptions.IgnoreCase), "#watch-description-content" },
       { new Regex("^https?://(www.)?vimeo.com", RegexOptions.IgnoreCase), ".description_wrapper" },
       { new Regex("^https?://(www.)?zdnet.com", RegexOptions.IgnoreCase), ".storyBody" },
-      { new Regex("^https?://(www.)?recode.net", RegexOptions.IgnoreCase), ".postarea" }
+      { new Regex("^https?://(www.)?recode.net", RegexOptions.IgnoreCase), ".postarea" },
+      { new Regex("^https?://(.*\\.)?slashdot.org", RegexOptions.IgnoreCase), ".body" }
     };
 
     #endregion
@@ -172,20 +173,49 @@ namespace ReadSharp.Ports.NReadability
     private Func<AttributeTransformationInput, AttributeTransformationResult> _anchorHrefTransformer;
     private Func<AttributeTransformationInput, AttributeTransformationResult> _metaTransformer;
 
-    #endregion
+        #endregion
 
-    #region Constructor(s)
+        #region Constructor(s)
 
-    /// <summary>
-    /// Initializes a new instance of NReadabilityTranscoder. Allows setting all options.
-    /// </summary>
-    /// <param name="dontStripUnlikelys">Determines whether elements that are unlikely to be a part of main content will be removed.</param>
-    /// <param name="dontNormalizeSpacesInTextContent">Determines whether spaces in InnerText properties of elements will be normalized automatically (eg. whether double spaces will be replaced with single spaces).</param>
-    /// <param name="dontWeightClasses">Determines whether 'weight-class' algorithm will be used when cleaning content.</param>
-    /// <param name="readingStyle">Styling for the extracted article.</param>
-    /// <param name="readingMargin">Margin for the extracted article.</param>
-    /// <param name="readingSize">Font size for the extracted article.</param>
-    public NReadabilityTranscoder(
+      /// <summary>
+      /// Initializes a new instance of NReadabilityTranscoder. Allows setting all options.
+      /// </summary>
+      /// <param name="dontStripUnlikelys">Determines whether elements that are unlikely to be a part of main content will be removed.</param>
+      /// <param name="dontNormalizeSpacesInTextContent">Determines whether spaces in InnerText properties of elements will be normalized automatically (eg. whether double spaces will be replaced with single spaces).</param>
+      /// <param name="dontWeightClasses">Determines whether 'weight-class' algorithm will be used when cleaning content.</param>
+      /// <param name="readingStyle">Styling for the extracted article.</param>
+      /// <param name="readingMargin">Margin for the extracted article.</param>
+      /// <param name="readingSize">Font size for the extracted article.</param>
+      /// <param name="articleElementHints">Hints for sites with difficult to find article bodies, in form of a dictionary of a regex matching the url of the content and the selector for the element containing the article</param>
+      public NReadabilityTranscoder(
+          bool dontStripUnlikelys,
+          bool dontNormalizeSpacesInTextContent,
+          bool dontWeightClasses,
+          ReadingStyle readingStyle,
+          ReadingMargin readingMargin,
+          ReadingSize readingSize,
+          IDictionary<Regex, string> articleElementHints)
+            : this(dontStripUnlikelys, dontNormalizeSpacesInTextContent, dontWeightClasses, readingStyle, readingMargin, readingSize)
+        {
+          if (articleElementHints != null)
+          {
+              foreach (var kvp in articleElementHints)
+              {
+                  _articleContentElementHints[kvp.Key] = kvp.Value;
+              }
+          }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of NReadabilityTranscoder. Allows setting all options.
+        /// </summary>
+        /// <param name="dontStripUnlikelys">Determines whether elements that are unlikely to be a part of main content will be removed.</param>
+        /// <param name="dontNormalizeSpacesInTextContent">Determines whether spaces in InnerText properties of elements will be normalized automatically (eg. whether double spaces will be replaced with single spaces).</param>
+        /// <param name="dontWeightClasses">Determines whether 'weight-class' algorithm will be used when cleaning content.</param>
+        /// <param name="readingStyle">Styling for the extracted article.</param>
+        /// <param name="readingMargin">Margin for the extracted article.</param>
+        /// <param name="readingSize">Font size for the extracted article.</param>
+        public NReadabilityTranscoder(
       bool dontStripUnlikelys,
       bool dontNormalizeSpacesInTextContent,
       bool dontWeightClasses,
@@ -1928,7 +1958,7 @@ namespace ReadSharp.Ports.NReadability
       }
     }
 
-    private static string GetArticleContentElementHint(string url)
+    private string GetArticleContentElementHint(string url)
     {
       if (string.IsNullOrEmpty(url))
       {

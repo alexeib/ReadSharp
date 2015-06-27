@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using ReadSharp.Models;
 
 
 namespace ReadSharp
@@ -63,25 +64,22 @@ namespace ReadSharp
     /// Initializes a new instance of the <see cref="Reader" /> class.
     /// </summary>
     /// <param name="options">The HTTP options.</param>
-    public Reader(HttpOptions options = null)
-    {
-      // initialize transcoder
-      _transcoder = new NReadabilityTranscoder(
-        dontStripUnlikelys: false,
-        dontNormalizeSpacesInTextContent: true,
-        dontWeightClasses: false,
-        readingStyle: ReadingStyle.Ebook,
-        readingMargin: ReadingMargin.Narrow,
-        readingSize: ReadingSize.Medium
-      );
-
-      // get default HTTP options if none available
+    public Reader(HttpOptions options = null, TranscoderOptions transcoderOptions = null)
+    {      
+        // get default HTTP options if none available
       if (options == null)
       {
         options = HttpOptions.CreateDefault();
       }
 
+        if (transcoderOptions == null)
+        {
+            transcoderOptions = new TranscoderOptions();
+        }
+
       _options = options;
+
+      _transcoder = CreateTranscoder(transcoderOptions);
 
       // initialize custom encoder
       _encoder = new Encodings.Encoder(true);
@@ -113,8 +111,7 @@ namespace ReadSharp
     }
 
 
-
-    /// <summary>
+      /// <summary>
     /// Reads article content from the given URI.
     /// </summary>
     /// <param name="uri">An URI to extract the content from.</param>
@@ -245,7 +242,18 @@ namespace ReadSharp
       return _transcoder.Transcode(transcodingInput);
     }
 
-
+      private static NReadabilityTranscoder CreateTranscoder(TranscoderOptions transcoderOptions)
+      {
+          return new NReadabilityTranscoder(
+              dontStripUnlikelys: false,
+              dontNormalizeSpacesInTextContent: true,
+              dontWeightClasses: false,
+              readingStyle: ReadingStyle.Ebook,
+              readingMargin: ReadingMargin.Narrow,
+              readingSize: ReadingSize.Medium,
+              articleElementHints: transcoderOptions.ArticleElementHints
+              );
+      }
 
     /// <summary>
     /// Reverses the deep links.
