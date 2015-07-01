@@ -335,7 +335,7 @@ namespace ReadSharp
       // read response
       Stream responseStream = await response.Content.ReadAsStreamAsync();
 
-      string charset = response.Content.Headers.ContentType.CharSet;
+      string charset = response.Content.Headers.ContentType?.CharSet;
 
       // handle deep links
       if (options.UseDeepLinks)
