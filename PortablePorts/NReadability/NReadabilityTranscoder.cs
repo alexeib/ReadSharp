@@ -441,7 +441,11 @@ namespace ReadSharp.Ports.NReadability
 
       if (!string.IsNullOrEmpty(url))
       {
-        nextPageUrl = FindNextPageLink(document.GetBody(), url);
+          var body = document.GetBody();
+          if (body != null)
+          {
+              nextPageUrl = FindNextPageLink(body, url);
+          }
       }
 
       XElement articleTitleElement = ExtractArticleTitle(document);
@@ -923,6 +927,12 @@ namespace ReadSharp.Ports.NReadability
       bodyInnerHtml = _ReplaceFontsRegex.Replace(bodyInnerHtml, "<$1span>");
 
       documentBody.SetInnerHtml(bodyInnerHtml);
+
+        if (!rootElement.Elements()
+                       .Any(e => e == documentBody))
+        {
+            rootElement.Add(documentBody);
+        }
     }
 
     internal XElement ExtractArticleTitle(XDocument document)

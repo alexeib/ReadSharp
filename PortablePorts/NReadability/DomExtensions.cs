@@ -57,7 +57,18 @@ namespace ReadSharp.Ports.NReadability
         return null;
       }
 
-      return documentRoot.GetElementsByTagName("body").FirstOrDefault();
+        var bodies = documentRoot.GetElementsByTagName("body")
+                                 .ToList();
+        if (bodies.Count > 1)
+        {
+            // we have to pick one body out of many, so choose the one that has the longest text. Not the most correct or fastest alg. TODO: find better way
+            return bodies.Aggregate((currMin, x) => (currMin == null || x.ToString(SaveOptions.DisableFormatting)
+                                                                         .Length < currMin.ToString(SaveOptions.DisableFormatting).Length
+                                                         ? x
+                                                         : currMin));
+        }
+
+        return bodies.FirstOrDefault();
     }
 
     public static string GetTitle(this XDocument document)
