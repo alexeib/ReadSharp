@@ -99,7 +99,7 @@ namespace ReadSharp.Ports.NReadability
       {
         sgmlReader.CaseFolding = CaseFolding.ToLower;
         sgmlReader.DocType = "HTML";
-        sgmlReader.WhitespaceHandling = WhitespaceHandling.None;
+        sgmlReader.WhitespaceHandling = Sgml.WhitespaceHandling.None;
 
         using (var sr = new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(htmlContent))))
         {
